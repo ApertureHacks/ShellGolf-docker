@@ -1,0 +1,8 @@
+{
+    "name": "ShellGolf",
+    "version": "0.0.1",
+    "dependencies": {
+        "express": "3.x",
+        "passport-twitter": "1.0.x"
+    }
+}
