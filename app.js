@@ -89,16 +89,6 @@ if ('development' === app.get('env')) {
 app.get('/', routes.index);
 app.get('/users', user.list);
 
-//Set up auth routes
-// FIXME: put this is the express convention places
-app.get('/', function(req, res) {
-    if(req.user) {
-        res.send("Got user " + req.user);
-    } else {
-        res.send("Hello world! Go log in");
-    }
-});
-
 app.get('/auth/twitter', passport.authenticate('twitter'));
 app.get('/auth/twitter/callback',
     passport.authenticate('twitter', { successRedirect: '/',
