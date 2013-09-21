@@ -9,7 +9,6 @@
         "express": "3.4.x",
         "passport-twitter": "1.0.x",
         "mongoose": "3.6",
-        "twitter-bootstrap-3.0.0": "3.0.x",
         "jade": "0.35.x"
     }
 }
