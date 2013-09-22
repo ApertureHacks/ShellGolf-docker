@@ -6,6 +6,10 @@ var zmq_client = function(user, course, cmds) {
 
   requester.on("message", function(reply) {
     console.log(reply.toString());
+    if(reply.success) {
+      return true;
+    }
+    return false;
   });
 
   requester.connect("tcp://SERVERNAME:5555");
