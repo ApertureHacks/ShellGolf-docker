@@ -3,6 +3,8 @@
  * GET courses
  */
 
+var zmq = require('../lib/zmq_client');
+
 exports.course = function(req, res){
   var numeric_id = req.params[0];
   var Course = mongoose.model('Course', CourseSchema);
@@ -20,5 +22,12 @@ exports.course = function(req, res){
 exports.submit = function(req, res){
   var numeric_id = req.params.id_number;
   var commands = req.query.commands;
+
+  // Replace newlines with semicolons
+  commands = commands.replace('\n', '; ');
+
+  var result = zmq.zmq_client(req.session.user.uid, numeric_id, commands);
+
+  // FIXME: figure out out to send failure AJAX response
   res.send("success or something");
 };
