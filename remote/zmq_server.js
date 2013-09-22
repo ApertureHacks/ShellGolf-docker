@@ -28,7 +28,7 @@ function execute_cmds(request) {
   function puts(error, stdout, stderr) { sys.puts(stdout); }
 
   //Begin execution
-  exec("docker run -d course-" + request.course_id + " bash -c '" + cmds + "'",
+  exec("docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'",
        function(error, stdout, stderr) {
          container = stdout.toString();
   });
