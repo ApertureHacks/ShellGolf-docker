@@ -1,3 +1,16 @@
 extends layout
 
 block content
+  div(class="jumbotron")
+    div(class="container")
+      h1 Fore > /dev/null
+      p Welcome to Shell Golf, an interactive, competitive tutorial for learning
+        | how to leverage the power of the UNIX shell to do your bidding.
+  div(class="container")
+    div(class="row")
+      div(class="col-lg-4")
+        h2= courses[0].name
+        p= courses[0].description
+        p
+          a(class="btn btn-default", href="/courses/" + courses[0].id_number) Try It &raquo;
+      //- FIXME: add the other two...

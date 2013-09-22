@@ -29,6 +29,19 @@ body {
   margin: 20px 0;
 }
 
+#wrap > .container {
+  padding: 60px 15px 0;
+}
+
+#footer > .container {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+code {
+  font-size: 80%;
+}
+
 
 /* Other CSS
 -------------------------------------------------- */

@@ -6,11 +6,11 @@
 var express = require('express')
   , path = require('path')
   , http = require('http')
-  , mongoose = require('mongoose')
   , passport = require('passport')
   , TwitterStrategy = require('passport-twitter').Strategy;
 
-var Schema = mongoose.Schema;
+mongoose = require('mongoose');
+Schema = mongoose.Schema;
 
 var config = require('./config.js')
   , routes = require('./routes')
@@ -19,13 +19,20 @@ var config = require('./config.js')
 var app = express();
 
 //Set up mongoose
-var UserSchema = new Schema({
+UserSchema = new Schema({
     provider: String,
     uid: String,
     name: String,
     image: String,
     created: {type: Date, default: Date.now}
 });
+
+CourseSchema = new Schema({
+  id_number: Number
+, name: String
+, description: String
+});
+
 mongoose.connect('mongodb://localhost/shell-golf');
 mongoose.model('User', UserSchema);
 
