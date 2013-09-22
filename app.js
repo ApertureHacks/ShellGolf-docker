@@ -98,6 +98,7 @@ if ('development' === app.get('env')) {
 
 app.get('/', routes.index);
 app.get('/course/:id_number', course.course);
+app.get('/course/:id_number/submit', course.submit);
 // app.get('/users', user.list);
 
 app.get('/auth/twitter', passport.authenticate('twitter'));
