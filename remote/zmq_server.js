@@ -5,7 +5,7 @@ var responder = zmq.socket('rep');
 responder.on('message', function(request) {
   request = JSON.parse(request);
   console.log("Received request: " + request.toString());
-  var reponse = { "user": request.user,
+  var response = { "user": request.user,
                   "success": execute_cmds(request)
   };
   setTimeout(function() {
