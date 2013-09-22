@@ -33,7 +33,7 @@ function execute_cmds(request, response) {
   console.log("$ docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'");
   exec("docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'",
       function(error, stdout, stderr) {
-        container = stdout.toString();
+        container = stdout.toString().trim();
         if (error && error.code !== 0) {
           console.log("Error running docker");
           console.log(stderr.toString());
@@ -71,8 +71,8 @@ function extract_result(container, request, response){
 
 function verify_solution(container, request, response){
   console.log("Running verification:");
-  console.log("./course-" + request.course + " ./" + request.epoch);
-  exec("./course-" + request.course + " ./" + request.epoch,
+  console.log("./course-" + request.course_id + ".sh ./" + request.epoch);
+  exec("./course-" + request.course_id + ".sh ./" + request.epoch,
         function(error, stdout, stderr) {
           if(error && error.code === 0) {
             response.success = true;
