@@ -7,6 +7,10 @@ responder.on('message', function(request) {
   var reponse = { "user": request.user,
                   "success": execute_cmds(request)
   };
+  setTimeout(function() {
+    // send reply back to client.
+    responder.send(response);
+  }, 1000);
 });
 
 responder.bind('tcp://*:5555', function(err) {
