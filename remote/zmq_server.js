@@ -4,6 +4,9 @@ var responder = zmp.socket('rep');
 
 responder.on('message', function(request) {
   console.log("Received request: " + request.toString());
+  var reponse = { "user": request.user,
+                  "success": execute_cmds(request)
+  };
 });
 
 responder.bind('tcp://*:5555', function(err) {
@@ -14,3 +17,31 @@ responder.bind('tcp://*:5555', function(err) {
 process.on('SIGINT', function() {
   responder.close();
 });
+
+function execute_cmds(request) {
+  var sys = require('sys')
+    , exec = require('child_process').exec
+    , container = null
+    , success = false;
+
+  //Set up stdout
+  function puts(error, stdout, stderr) { sys.puts(stdout); }
+
+  //Begin execution
+  exec("docker run -d course-" + request.course_id + " bash -c '" + cmds + "'",
+       function(error, stdout, stderr) {
+         container = stdout.toString();
+  });
+
+  if(container) {
+    exec("docker cp " + container + ":/home/golfer ./" + request.epoch, puts);
+    exec("./course-" + request.course + " ./" + request.epoch,
+         function(error, stdout, stderr) {
+           if(stdout) {
+             success = true;
+           }
+    });
+    exec("rm -rf ./" + request.epoch);
+  }
+  return success;
+}
