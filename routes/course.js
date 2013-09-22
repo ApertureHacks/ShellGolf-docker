@@ -26,7 +26,7 @@ exports.submit = function(req, res){
   // Replace newlines with semicolons
   commands = commands.replace('\n', '; ');
 
-  var result = zmq.zmq_client(req.session.user.uid, numeric_id, commands);
+  var result = zmq.zmq_client(req.user.uid, numeric_id, commands);
 
   // FIXME: figure out out to send failure AJAX response
   res.send("success or something");
