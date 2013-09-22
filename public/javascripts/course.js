@@ -6,20 +6,22 @@ $("#submit_code").click(function(btn){
   $btn.addClass("btn-info");
 
   commands = $commands_field.val();
-  $.ajax(
-    window.location.pathname + "/submit",
-    {
-      data: { user_id: $("#user_id").val(),
-              commands: commands
-      },
-      success: function(result){
+  $.ajax({
+    type: 'POST',
+    url: window.location.pathname + "/submit",
+    data: { commands: commands },
+    success: function(data){
+      console.log(data);
+      data = JSON.parse(data);
+      if (data.success) {
         $btn.removeClass("btn-info");
         $btn.addClass("btn-success");
-      },
-      failure: function(result){
+      } else {
         $btn.removeClass("btn-info");
         $btn.addClass("btn-warning");
-      },
-      timeout: 240
+      }},
+    error: function(xhr, status, error){
+      console.log("AJAX ERROR: " + error.message);
+    }
   });
 });

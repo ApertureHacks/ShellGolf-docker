@@ -21,13 +21,15 @@ exports.course = function(req, res){
 
 exports.submit = function(req, res){
   var numeric_id = req.params.id_number;
-  var commands = req.query.commands;
+  var commands = req.body.commands;
 
   // Replace newlines with semicolons
   commands = commands.replace('\n', '; ');
-
-  var result = zmq.zmq_client(req.user.uid, numeric_id, commands);
-
-  // FIXME: figure out out to send failure AJAX response
-  res.send("success or something");
+  zmq.zmq_client(req.user.uid, numeric_id, commands, function(result){
+    console.log("Got result: " + result.toString());
+    // res.contentType('json');
+    res.write('{"success": ' + result.toString() + '}');
+    res.end();
+  });
+  // FIXME: store the result somewhere
 };
