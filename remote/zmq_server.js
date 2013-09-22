@@ -74,7 +74,7 @@ function verify_solution(container, request, response){
   console.log("./course-" + request.course_id + ".sh ./" + request.epoch + "/root");
   exec("./course-" + request.course_id + ".sh ./" + request.epoch + "/root",
         function(error, stdout, stderr) {
-          if(error && error.code === 0) {
+          if(!error) {
             response.success = true;
           }
           responder.send(JSON.stringify(response));
