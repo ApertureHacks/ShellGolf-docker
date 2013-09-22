@@ -53,16 +53,23 @@ function check_process(container, request, response){
         check_process(container, request, response);
       }, 5000);
     } else {
-      verify_solution(container, request, response);
+      extract_result(container, request, response);
     }
   });
 }
 
-function verify_solution(container, request, response){
+function extract_result(container, request, response){
   console.log("Extracting result from container:");
   console.log("$ docker cp " + container + ":/home/golfer ./" + request.epoch);
-  exec("docker cp " + container + ":/home/golfer ./" + request.epoch, puts);
+  exec("docker cp " + container + ":/home/golfer ./" + request.epoch, function(error, stdout, stderr){
+    if (error) {
+      console.log(stderr);
+    }
+    verify_solution(container, request, response);
+  });
+}
 
+function verify_solution(container, request, response){
   console.log("Running verification:");
   console.log("./course-" + request.course + " ./" + request.epoch);
   exec("./course-" + request.course + " ./" + request.epoch,
@@ -71,8 +78,7 @@ function verify_solution(container, request, response){
             response.success = true;
           }
           responder.send(JSON.stringify(response));
+          console.log("Removing verification directory.");
+          exec("rm -rf ./" + request.epoch);
         });
-
-  console.log("Removing verification directory.");
-  exec("rm -rf ./" + request.epoch);
 }
