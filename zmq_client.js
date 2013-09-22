@@ -1,4 +1,4 @@
-var zmq_client = function(user, course, cmds) {
+exports.zmq_client = function(user, course, cmds) {
   var zmq = require('zmq');
 
   console.log("Connecting to Docker server...");
@@ -6,6 +6,7 @@ var zmq_client = function(user, course, cmds) {
 
   requester.on("message", function(reply) {
     console.log(reply.toString());
+    requester.close();
     if(reply.success) {
       return true;
     }
@@ -23,7 +24,4 @@ var zmq_client = function(user, course, cmds) {
   console.log("Sending request");
   requester.send(request);
 
-  process.on('SIGINT', function() {
-    requester.close();
-  });
 };
