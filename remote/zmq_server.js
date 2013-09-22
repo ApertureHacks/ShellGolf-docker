@@ -60,8 +60,8 @@ function check_process(container, request, response){
 
 function extract_result(container, request, response){
   console.log("Extracting result from container:");
-  console.log("$ docker cp " + container + ":/home/golfer ./" + request.epoch);
-  exec("docker cp " + container + ":/home/golfer ./" + request.epoch, function(error, stdout, stderr){
+  console.log("$ docker cp " + container + ":/root ./" + request.epoch);
+  exec("docker cp " + container + ":/root ./" + request.epoch, function(error, stdout, stderr){
     if (error) {
       console.log(stderr);
     }
