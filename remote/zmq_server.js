@@ -34,10 +34,11 @@ function execute_cmds(request) {
   });
 
   if(container) {
+    //FIXME: Wait for run to finish
     exec("docker cp " + container + ":/home/golfer ./" + request.epoch, puts);
     exec("./course-" + request.course + " ./" + request.epoch,
          function(error, stdout, stderr) {
-           if(stdout) {
+           if(error && error.code === 0) {
              success = true;
            }
     });
