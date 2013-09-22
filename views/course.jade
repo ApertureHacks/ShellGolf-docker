@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  div(class="container")
+    div(class="well")
+      h3= course.name
+      p= course.instructions
+    div(class="row")
+      div(class="col-lg-8")
+        h3 Input Commands
+        form(role="form")
+          div(class="form-group")
+            textarea(class="form-control", id="commands", rows="8")
+      div(class="col-lg-4")
+        h3 Starting State
+        pre= course.start_text

@@ -14,6 +14,7 @@ Schema = mongoose.Schema;
 
 var config = require('./config.js')
   , routes = require('./routes')
+  , course = require('./routes/course')
   , user = require('./routes/user');
 
 var app = express();
@@ -31,6 +32,8 @@ CourseSchema = new Schema({
   id_number: Number
 , name: String
 , description: String
+, instructions: String
+, start_text: String
 });
 
 mongoose.connect('mongodb://localhost/shell-golf');
@@ -94,7 +97,8 @@ if ('development' === app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/users', user.list);
+app.get('/course/:id_number', course.course);
+// app.get('/users', user.list);
 
 app.get('/auth/twitter', passport.authenticate('twitter'));
 app.get('/auth/twitter/callback',
