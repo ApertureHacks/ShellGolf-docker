@@ -60,8 +60,8 @@ function check_process(container, request, response){
 
 function extract_result(container, request, response){
   console.log("Extracting result from container:");
-  console.log("$ docker cp " + container + ":/root ./" + request.epoch);
-  exec("docker cp " + container + ":/root ./" + request.epoch, function(error, stdout, stderr){
+  console.log("$ mkdir ./" + request.epoch + " && docker cp " + container + ":/root ./" + request.epoch);
+  exec("mkdir ./" + request.epoch + " && docker cp " + container + ":/root ./" + request.epoch, function(error, stdout, stderr){
     if (error) {
       console.log(stderr);
     }
@@ -71,8 +71,8 @@ function extract_result(container, request, response){
 
 function verify_solution(container, request, response){
   console.log("Running verification:");
-  console.log("./course-" + request.course_id + ".sh ./" + request.epoch);
-  exec("./course-" + request.course_id + ".sh ./" + request.epoch,
+  console.log("./course-" + request.course_id + ".sh ./" + request.epoch + "/root");
+  exec("./course-" + request.course_id + ".sh ./" + request.epoch + "/root",
         function(error, stdout, stderr) {
           if(error && error.code === 0) {
             response.success = true;
