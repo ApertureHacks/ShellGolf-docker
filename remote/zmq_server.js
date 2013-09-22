@@ -3,13 +3,14 @@ var zmq = require('zmq');
 var responder = zmq.socket('rep');
 
 responder.on('message', function(request) {
+  request = JSON.parse(request);
   console.log("Received request: " + request.toString());
   var reponse = { "user": request.user,
                   "success": execute_cmds(request)
   };
   setTimeout(function() {
     // send reply back to client.
-    responder.send(response);
+    responder.send(JSON.stringify(response));
   }, 1000);
 });
 
