@@ -1,6 +1,6 @@
 var zmq = require('zmq');
 
-var responder = zmp.socket('rep');
+var responder = zmq.socket('rep');
 
 responder.on('message', function(request) {
   console.log("Received request: " + request.toString());
