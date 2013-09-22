@@ -32,6 +32,8 @@ function execute_cmds(request) {
   function puts(error, stdout, stderr) { sys.puts(stdout); }
 
   //Begin execution
+  console.log("Executing docker command:");
+  console.log("$ docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'");
   exec("docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'",
        function(error, stdout, stderr) {
          container = stdout.toString();
@@ -39,13 +41,19 @@ function execute_cmds(request) {
 
   if(container) {
     //FIXME: Wait for run to finish
+    console.log("Extracting result from container:");
+    console.log("$ docker cp " + container + ":/home/golfer ./" + request.epoch);
     exec("docker cp " + container + ":/home/golfer ./" + request.epoch, puts);
+
+    console.log("Running verification:");
+    console.log("./course-" + request.course + " ./" + request.epoch);
     exec("./course-" + request.course + " ./" + request.epoch,
          function(error, stdout, stderr) {
            if(error && error.code === 0) {
              success = true;
            }
     });
+    console.log("Removing verification directory.");
     exec("rm -rf ./" + request.epoch);
   }
   return success;
