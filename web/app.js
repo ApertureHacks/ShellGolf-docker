@@ -9,49 +9,26 @@ var express = require('express')
   , passport = require('passport')
   , TwitterStrategy = require('passport-twitter').Strategy;
 
-mongoose = require('mongoose');
-Schema = mongoose.Schema;
-
-var config = require('./config.js')
+var config = require('./config')
+  , db = require('./lib/db')
   , routes = require('./routes')
   , course = require('./routes/course')
   , user = require('./routes/user');
 
 var app = express();
 
-//Set up mongoose
-UserSchema = new Schema({
-    provider: String,
-    uid: String,
-    name: String,
-    image: String,
-    created: {type: Date, default: Date.now}
-});
-
-CourseSchema = new Schema({
-  id_number: Number
-, name: String
-, description: String
-, instructions: String
-, start_text: String
-});
-
-mongoose.connect('mongodb://localhost/shell-golf');
-mongoose.model('User', UserSchema);
-
 //Passport Auth
-var User = mongoose.model('User');
 passport.use(new TwitterStrategy({
     consumerKey: config.twitter_auth.key,
     consumerSecret: config.twitter_auth.secret,
     callbackURL: config.twitter_auth.callback_url
   },
   function(token, tokenSecret, profile, done) {
-    User.findOne({uid: profile.id}, function(err, user) {
+    db.User.findOne({uid: profile.id}, function(err, user) {
         if(user) {
             done(null, user);
         } else {
-            user = new User();
+            var user = new db.User();
             user.provider = "twitter";
             user.uid = profile.id;
             user.name = profile.displayName;
@@ -71,7 +48,7 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(uid, done) {
-  User.findOne({uid: uid}, function (err, user) {
+  db.User.findOne({uid: uid}, function (err, user) {
     done(err, user);
   });
 });

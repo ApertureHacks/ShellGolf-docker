@@ -1,9 +1,7 @@
+// GET courses
 
-/*
- * GET courses
- */
-
-var zmq = require('../lib/zmq_client');
+var zmq = require('../lib/zmq_client')
+  , db = require('../lib/db');
 
 exports.course = function(req, res){
   var numeric_id = req.params[0];
