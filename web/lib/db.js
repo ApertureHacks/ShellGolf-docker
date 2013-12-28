@@ -10,11 +10,12 @@ Schema = mongoose.Schema;
  * image: url for their profile picture.
  */
 UserSchema = new Schema({
-    provider: String,
-    uid: String,
-    name: String,
-    image: String,
-    created: {type: Date, default: Date.now}
+  provider: String
+, uid: String
+, name: String
+, image: String
+, is_admin: {type: Boolean, default: false}
+, created: {type: Date, default: Date.now}
 });
 
 
@@ -34,8 +35,7 @@ CourseSchema = new Schema({
 , start_text: String
 });
 
-mongoose.connect(config.database.uri, { 'user': config.database.user
-                                      , 'pass': config.database.pass });
+mongoose.connect(config.db.uri, config.db);
 
 exports.User = mongoose.model('User', UserSchema);
 exports.Course = mongoose.model('Course', CourseSchema);
