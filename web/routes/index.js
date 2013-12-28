@@ -1,5 +1,8 @@
-// GET home page.
+// Include other routes
+exports.user = require('./user');
+exports.course = require('./course');
 
+// GET home page.
 var db = require('../lib/db');
 
 exports.index = function(req, res){

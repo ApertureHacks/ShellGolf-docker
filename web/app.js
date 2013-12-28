@@ -5,53 +5,14 @@
 
 var express = require('express')
   , path = require('path')
-  , http = require('http')
-  , passport = require('passport')
-  , TwitterStrategy = require('passport-twitter').Strategy;
+  , http = require('http');
 
 var config = require('./config')
   , db = require('./lib/db')
-  , routes = require('./routes')
-  , course = require('./routes/course')
-  , user = require('./routes/user');
+  , passport = require('./lib/passport.js')
+  , routes = require('./routes');
 
 var app = express();
-
-//Passport Auth
-passport.use(new TwitterStrategy({
-    consumerKey: config.twitter_auth.key,
-    consumerSecret: config.twitter_auth.secret,
-    callbackURL: config.twitter_auth.callback_url
-  },
-  function(token, tokenSecret, profile, done) {
-    db.User.findOne({uid: profile.id}, function(err, user) {
-        if(user) {
-            done(null, user);
-        } else {
-            var user = new db.User();
-            user.provider = "twitter";
-            user.uid = profile.id;
-            user.name = profile.displayName;
-            user.image = profile._json.profile_image_url;
-            user.save(function(err) {
-                if(err) { throw err; }
-                done(null, user);
-            });
-        }
-    });
-  }
-));
-
-//User serialization
-passport.serializeUser(function(user, done) {
-  done(null, user.uid);
-});
-
-passport.deserializeUser(function(uid, done) {
-  db.User.findOne({uid: uid}, function (err, user) {
-    done(err, user);
-  });
-});
 
 // all environments
 app.set('port', process.env.PORT || 3000);
@@ -74,9 +35,8 @@ if ('development' === app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/course/:id_number', course.course);
-app.post('/course/:id_number/submit', course.submit);
-// app.get('/users', user.list);
+app.get('/course/:id_number', routes.course.course);
+app.post('/course/:id_number/submit', routes.course.submit);
 
 app.get('/auth/twitter', passport.authenticate('twitter'));
 app.get('/auth/twitter/callback',
