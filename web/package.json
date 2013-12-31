@@ -11,6 +11,7 @@
         "passport-twitter": "1.0.x",
         "mongoose": "3.6",
         "jade": "0.35.x",
+        "bytes": "0.2.x",
         "zmq": "2.5.1"
     }
 }
