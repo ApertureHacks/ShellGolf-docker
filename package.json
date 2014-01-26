@@ -1,14 +1,14 @@
 {
-  "name": "ShellGolf-backend",
+  "name": "ShellGolf-docker",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "node app.js"
   },
   "dependencies": {
-    "zmq": "2.5.1",
-    "sys": "0.0.1",
-    "docker.io": "0.6.x",
-    "walkdir": "0.0.7"
+    "amqp": "~0.1.8",
+    "dockerode": "~1.2.3",
+    "mongoose": "~3.8.5",
+    "walkdir": "~0.0.7"
   }
 }

@@ -1,84 +1,58 @@
-var zmq = require('zmq')
-  , sys = require('sys')
-  , exec = require('child_process').exec
-  , container = null
-  , success = false;
+var amqp = require('amqp')
+  , Docker = require('dockerode')
+  , exec = require('child_process').exec;
 
-var responder = zmq.socket('rep');
+var config = require('./config')
+  , db = require('./lib/db');
 
-responder.on('message', function(request) {
-  request = JSON.parse(request);
-  console.log("Received request: " + request.toString());
-  var response = { "user": request.user,
-                   "success": false
-                 };
-  execute_cmds(request, response);
-});
+var docker = new Docker({socketPath: '/var/run/docker.sock'})
+  , connection = amqp.createConnection({ host: config.rabbitmq.host });
 
-responder.bind('tcp://*:5555', function(err) {
-  if(err) { console.log(err); }
-  else { console.log("Listening on 5555..."); }
-});
 
-process.on('SIGINT', function() {
-  responder.close();
-});
-
-//Set up stdout
-function puts(error, stdout, stderr) { sys.puts(stdout); }
-
-function execute_cmds(request, response) {
-  //Begin execution
-  console.log("Executing docker command:");
-  console.log("$ docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'");
-  exec("docker run -d course-" + request.course_id + " bash -c '" + request.cmds + "'",
-      function(error, stdout, stderr) {
-        container = stdout.toString().trim();
-        if (error && error.code !== 0) {
-          console.log("Error running docker");
-          console.log(stderr.toString());
-          responder.send(JSON.stringify(response));
-        } else {
-          check_process(container, request, response);
-        }
-      });
-}
-
-// verify that the container has finished before running verifications
-function check_process(container, request, response){
-  exec("docker ps -notrunc -q", function(error, stdout, stderr){
-    if (stdout.indexOf(container) !== -1) {
-      // the container is still running, wait a bit and check again
-      setTimeout(function(){
-        check_process(container, request, response);
-      }, 5000);
-    } else {
-      extract_result(container, request, response);
-    }
+connection.on('ready', function() {
+  console.log('Connected to ' + config.rabbitmq.host);
+  connection.queue('runCode', {autoDelete: true}, function(queue) {
+    console.log('Subscribing to runCode.');
+    queue.subscribe(function(msg) {
+      try{
+        // FIXME: actually run the tests.
+        connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
+                                              , result: true }, { autoDelete: true });
+      } catch(e) {
+        console.log('ERROR:\n' + e);
+      }
+    });
   });
-}
+});
 
-function extract_result(container, request, response){
-  console.log("Extracting result from container:");
-  console.log("$ mkdir ./" + request.epoch + " && docker cp " + container + ":/root ./" + request.epoch);
-  exec("mkdir ./" + request.epoch + " && docker cp " + container + ":/root ./" + request.epoch, function(error, stdout, stderr){
-    if (error) {
-      console.log(stderr);
+
+/*
+ * Given a challenge object as defined in lib/db.js, creates a docker
+ * image to run tests for that challenge in.
+ */
+function createImage(challenge) {
+  var name = challenge.name.replace(/ +/g, '_').toLowerCase();
+
+  // Starting with this makes adding the other commands easier
+  var createFiles = 'true';
+
+  var file;
+  for (var i = 0; i < challenge.start.files.length; i++) {
+    file = challenge.start.files[i];
+    console.log(file);
+    createFiles = createFiles + ' && mkdir -p `dirname ' + file.name + '` && echo $\'' + file.contents + '\' > ' + file.name;
+  }
+
+  docker.run('jmatth/shellgolf-base', ['bash', '-c', createFiles], process.stdout, function(err, data, container) {
+    if (err) {
+      throw(err);
     }
-    verify_solution(container, request, response);
-  });
-}
 
-function verify_solution(container, request, response){
-  console.log("Running verification:");
-  console.log("./course-" + request.course_id + ".sh ./" + request.epoch + "/root");
-  exec("./course-" + request.course_id + ".sh ./" + request.epoch + "/root",
-        function(error, stdout, stderr) {
-          if(!error) {
-            response.success = true;
-          }
-          responder.send(JSON.stringify(response));
-          console.log("Removing verification directory.");
-          exec("rm -rf ./" + request.epoch);
-        });
+    container = docker.getContainer(container.id);
+    container.commit({ repo: name }, function(err, data) {
+      if (err) {
+        throw(err);
+      }
+    });
+  });
 }
