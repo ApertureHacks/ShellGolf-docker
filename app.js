@@ -43,9 +43,30 @@ function subRunCode() {
     console.log('Subscribing to runCode.');
     queue.subscribe(function(msg) {
       try{
-        // FIXME: actually run the tests.
-        connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
-                                              , result: true }, { autoDelete: true });
+        db.Challenge.findOne({_id: msg.challengeId}).exec(function(err, challenge) {
+          if (err) {
+            throw(err);
+          }
+          var containerName = challenge.name.replace(/ +/g, '_').toLowerCase() + '-' + challenge.rev;
+          var containerOpts = { Image: containerName
+                              , Tty: true
+                              , WorkingDir: '/home/golfer'
+                              , User: 'golfer'
+                              , Cmd: ['/bin/bash', '-c', msg.commands]
+                              , Env: ['HOME /home/golfer', 'PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin']};
+
+          docker.createContainer(containerOpts, function(err, container){
+            container.attach({stream: true, stdout: true, stderr: true}, function(err, stream) {
+              container.start(function(err, data) {
+                container.wait(function(err, data) {
+                  // FIXME: verify it actualy worked.
+                  connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
+                                                        , result: true }, { autoDelete: true });
+                });
+              });
+            });
+          });
+        });
       } catch(e) {
         console.log('ERROR:\n' + e);
       }
@@ -68,16 +89,28 @@ function createImage(challenge) {
     createFiles = createFiles + ' && mkdir -p `dirname ' + file.name + '` && echo $\'' + file.contents + '\' > ' + file.name;
   }
 
-  docker.run('jmatth/shellgolf-base', ['bash', '-c', createFiles], process.stdout, function(err, data, container) {
+  var containerOpts = { Image: 'jmatth/shellgolf-base'
+                      , WorkingDir: '/home/golfer'
+                      , User: 'golfer'
+                      , Cmd: ['/bin/sh', '-c', createFiles]
+                      , 'Env': ['HOME /home/golfer']};
+  docker.createContainer(containerOpts, function(err, container) {
     if (err) {
       throw(err);
     }
 
-    container = docker.getContainer(container.id);
-    container.commit({ repo: name }, function(err, data) {
-      if (err) {
-        throw(err);
-      }
+    container.attach({stream: true, stdout: true, stderr: true}, function(err, stream) {
+      container.start(function(err, data) {
+        if (err) {
+          throw(err);
+        }
+
+        container.wait(function(err, data) {
+          container.commit({ repo: name }, function(err, data){
+            if(err) throw(err);
+          });
+        });
+      });
     });
   });
 }
