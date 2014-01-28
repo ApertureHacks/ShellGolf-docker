@@ -7,8 +7,9 @@
   },
   "dependencies": {
     "amqp": "~0.1.8",
-    "dockerode": "~1.2.3",
+    "dockerode": "git://github.com/jmatth/dockerode.git#fix-copy",
     "mongoose": "~3.8.5",
+    "tar": "~0.1.19",
     "walkdir": "~0.0.7"
   }
 }

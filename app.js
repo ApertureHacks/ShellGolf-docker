@@ -1,5 +1,7 @@
 var amqp = require('amqp')
   , Docker = require('dockerode')
+  , fs = require('fs')
+  , tar = require('tar')
   , exec = require('child_process').exec;
 
 var config = require('./config')
@@ -60,6 +62,7 @@ function subRunCode() {
               container.start(function(err, data) {
                 container.wait(function(err, data) {
                   // FIXME: verify it actualy worked.
+                  extractContents(container, msg.sub_uuid);
                   connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
                                                         , result: true }, { autoDelete: true });
                 });
@@ -111,6 +114,27 @@ function createImage(challenge) {
           });
         });
       });
+    });
+  });
+}
+
+/**
+ * Extracts the contents of /home/golfer from the provided container.
+ *
+ * @method extractContents
+ * @param {Object} container dockerode container object to extract files from.
+ * @param {String} uuid UUID to name the destination directory.
+ * @param {Function} callback function to be called when extracion is complete. It will be passed the path of directory where files have been extacted to.
+ */
+function extractContents(container, uuid, callback) {
+  var dir = '/tmp/' + uuid;
+  container.copy('/home/golfer', function(err, data) {
+    var output = tar.Extract({ path: '/tmp/' + uuid, strip: 1 });
+    data.on('readable', function() {
+      output.write(data.read());
+    });
+    data.on('end', function() {
+      callback(dir);
     });
   });
 }
