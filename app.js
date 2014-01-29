@@ -5,6 +5,7 @@ var amqp = require('amqp')
   , exec = require('child_process').exec;
 
 var config = require('./config')
+  , verifySoltion = require('./lib/verifySolution.js')
   , db = require('./lib/db');
 
 var docker = new Docker({socketPath: '/var/run/docker.sock'})
@@ -62,9 +63,13 @@ function subRunCode() {
               container.start(function(err, data) {
                 container.wait(function(err, data) {
                   // FIXME: verify it actualy worked.
-                  extractContents(container, msg.sub_uuid);
-                  connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
-                                                        , result: true }, { autoDelete: true });
+                  extractContents(container, msg.sub_uuid, function(dir) {
+                    verifySoltion(dir, challenge.end, function(success) {
+                      console.log('publishing response to queue: ' + success);
+                      connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
+                                                            , result: success }, { autoDelete: true });
+                    });
+                  });
                 });
               });
             });
@@ -128,12 +133,15 @@ function createImage(challenge) {
  */
 function extractContents(container, uuid, callback) {
   var dir = '/tmp/' + uuid;
-  container.copy('/home/golfer', function(err, data) {
+  container.copy({ Resource: '/home/golfer' }, function(err, data) {
     var output = tar.Extract({ path: '/tmp/' + uuid, strip: 1 });
     data.on('readable', function() {
       output.write(data.read());
     });
     data.on('end', function() {
+      output.end();
+    });
+    output.on('close', function() {
       callback(dir);
     });
   });
