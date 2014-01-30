@@ -60,13 +60,17 @@ function subRunCode() {
 
           docker.createContainer(containerOpts, function(err, container){
             container.attach({stream: true, stdout: true, stderr: true}, function(err, stream) {
+              var output = '';
+              stream.on('readable', function() {
+                output += stream.read();
+              });
               container.start(function(err, data) {
                 container.wait(function(err, data) {
-                  // FIXME: verify it actualy worked.
                   extractContents(container, msg.sub_uuid, function(dir) {
                     verifySoltion(dir, challenge.end, function(success) {
                       console.log('publishing response to queue: ' + success);
                       connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
+                                                            , output: output
                                                             , result: success }, { autoDelete: true });
                     });
                   });
