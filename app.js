@@ -65,7 +65,19 @@ function subRunCode() {
                 output += stream.read();
               });
               container.start(function(err, data) {
+                var killed = false;
+                var timeout = setTimeout(function() {
+                  container.kill(function() {
+                    killed = true;
+                    console.log('container timed out for ' + msg.sub_uuid);
+                    connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
+                                                          , output: output
+                                                          , result: false }, { autoDelete: true });
+                  });
+                }, 30000);
                 container.wait(function(err, data) {
+                  if (killed) return;
+                  clearTimeout(timeout);
                   extractContents(container, msg.sub_uuid, function(dir) {
                     verifySoltion(dir, challenge.end, function(success) {
                       console.log('publishing response to queue: ' + success);
