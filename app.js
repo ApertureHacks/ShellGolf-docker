@@ -54,7 +54,7 @@ function subRunCode() {
           var containerOpts = { Image: containerName
                               , Tty: true
                               , WorkingDir: '/home/golfer'
-                              , User: 'golfer'
+                              , User: 'root'
                               , Cmd: ['/bin/bash', '-c', msg.commands]
                               , Env: ['HOME /home/golfer', 'PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin']};
 
