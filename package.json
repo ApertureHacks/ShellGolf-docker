@@ -8,6 +8,7 @@
   "dependencies": {
     "amqp": "~0.1.8",
     "dockerode": "~1.2.4",
+    "fs.extra": "~1.2.1",
     "mongoose": "~3.8.5",
     "tar": "~0.1.19",
     "walkdir": "~0.0.7"

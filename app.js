@@ -1,6 +1,6 @@
 var amqp = require('amqp')
   , Docker = require('dockerode')
-  , fs = require('fs')
+  , fs = require('fs.extra')
   , tar = require('tar')
   , exec = require('child_process').exec;
 
@@ -73,6 +73,7 @@ function subRunCode() {
                     connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
                                                           , output: output
                                                           , result: false }, { autoDelete: true });
+                    container.remove(endCallback);
                   });
                 }, 30000);
                 container.wait(function(err, data) {
@@ -84,6 +85,8 @@ function subRunCode() {
                       connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
                                                             , output: output
                                                             , result: success }, { autoDelete: true });
+                      container.remove(endCallback);
+                      fs.rmrf(dir, endCallback);
                     });
                   });
                 });
@@ -161,4 +164,15 @@ function extractContents(container, uuid, callback) {
       callback(dir);
     });
   });
+}
+
+/**
+ * Helper function that logs an error if there is one. Meant to be used as a callback.
+ * @method endCallback
+ * @param {Object} err Error passed in from calling function, if there is one.
+ */
+function endCallback(err) {
+  if (err) {
+    console.log(err);
+  }
 }
