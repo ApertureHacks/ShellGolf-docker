@@ -113,7 +113,11 @@ function createImage(challenge) {
 
   for (var i = 0; i < challenge.start.length; i++) {
     var file = challenge.start[i];
-    createFiles = createFiles + ' && mkdir -p `dirname ' + file.name + '` && echo $\'' + file.contents + '\' > ' + file.name;
+    if (file.contents.length <= 0) {
+      createFiles = createFiles + ' && mkdir -p `dirname ' + file.name + '` && touch ' + file.name;
+    } else {
+      createFiles = createFiles + ' && mkdir -p `dirname ' + file.name + '` && echo $\'' + file.contents + '\' > ' + file.name;
+    }
   }
 
   var containerOpts = { Image: 'jmatth/shellgolf-base'
