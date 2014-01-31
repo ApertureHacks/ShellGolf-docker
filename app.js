@@ -105,8 +105,8 @@ function subRunCode() {
 function createImage(challenge) {
   var name = challenge.name.replace(/ +/g, '_').toLowerCase() + '-' + challenge.rev;
 
-  // Starting with this makes adding the other commands easier
-  var createFiles = 'true';
+  // Sometimes it creates the files with weird permissions otherwise
+  var createFiles = 'umask 022';
 
   for (var i = 0; i < challenge.start.length; i++) {
     var file = challenge.start[i];
