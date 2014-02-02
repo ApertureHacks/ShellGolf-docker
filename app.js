@@ -45,53 +45,21 @@ function subRunCode() {
   connection.queue('runCode', {autoDelete: true}, function(queue) {
     console.log('Subscribing to runCode.');
     queue.subscribe(function(msg) {
+      var response = {};
+      response.sub_uuid = msg.sub_uuid;
       try{
         db.Challenge.findOne({_id: msg.challengeId}).exec(function(err, challenge) {
           if (err) {
             throw(err);
           }
-          var containerName = challenge.name.replace(/ +/g, '_').toLowerCase() + '-' + challenge.rev;
-          var containerOpts = { Image: containerName
-                              , Tty: true
-                              , WorkingDir: '/home/golfer'
-                              , User: 'root'
-                              , Cmd: ['/bin/bash', '-c', msg.commands]
-                              , Env: ['HOME /home/golfer', 'PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin']};
-
-          docker.createContainer(containerOpts, function(err, container){
-            container.attach({stream: true, stdout: true, stderr: true}, function(err, stream) {
-              var output = '';
-              stream.on('readable', function() {
-                output += stream.read();
-              });
-              container.start(function(err, data) {
-                var killed = false;
-                var timeout = setTimeout(function() {
-                  container.kill(function() {
-                    killed = true;
-                    console.log('container timed out for ' + msg.sub_uuid);
-                    connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
-                                                          , output: output
-                                                          , result: false }, { autoDelete: true });
-                    container.remove(endCallback);
-                  });
-                }, 30000);
-                container.wait(function(err, data) {
-                  if (killed) return;
-                  clearTimeout(timeout);
-                  extractContents(container, msg.sub_uuid, function(dir) {
-                    verifySoltion(dir, challenge.end, function(success) {
-                      console.log('publishing response to queue: ' + success);
-                      connection.publish(msg.responseQueue, { sub_uuid: msg.sub_uuid
-                                                            , output: output
-                                                            , result: success }, { autoDelete: true });
-                      container.remove(endCallback);
-                      fs.rmrf(dir, endCallback);
-                    });
-                  });
-                });
-              });
-            });
+          testCode(challenge, msg.commands, function(err, result) {
+            if (err) {
+              console.log(err);
+              connection.publish(msg.responseQueue, response, { autoDelete: true });
+              return;
+            }
+            response.result = result;
+            connection.publish(msg.responseQueue, response, { autoDelete: true });
           });
         });
       } catch(e) {
@@ -152,11 +120,13 @@ function createImage(challenge) {
  * @method extractContents
  * @param {Object} container dockerode container object to extract files from.
  * @param {String} uuid UUID to name the destination directory.
- * @param {Function} callback function to be called when extracion is complete. It will be passed the path of directory where files have been extacted to.
+ * @param {Function} callback Function to be called when extracion is complete.
+ *                            Should have the signature function(err, dir).
  */
 function extractContents(container, uuid, callback) {
   var dir = '/tmp/' + uuid;
   container.copy({ Resource: '/home/golfer' }, function(err, data) {
+    if (err) return callback(err);
     var output = tar.Extract({ path: '/tmp/' + uuid, strip: 1 });
     data.on('readable', function() {
       output.write(data.read());
@@ -165,7 +135,68 @@ function extractContents(container, uuid, callback) {
       output.end();
     });
     output.on('close', function() {
-      callback(dir);
+      callback(null, dir);
+    });
+  });
+}
+
+/**
+ * Check if a piece of code completes the challenge.
+ *
+ * @method testCode
+ * @param {Object} challenge Challenge object returned from the database.
+ * @param {String} code User submitted code to be tested.
+ * @param {Function} callback Called when tests are finished or error is
+ *                            detected. should have the signature function(err, result).
+ */
+function testCode(challenge, code, callback) {
+  var containerName = challenge.name.replace(/ +/g, '_').toLowerCase() + '-' + challenge.rev;
+  var containerOpts = { Image: containerName
+                      , Tty: true
+                      , WorkingDir: '/home/golfer'
+                      , User: 'root'
+                      , Cmd: ['/bin/bash', '-c', code]
+                      , Env: ['HOME /home/golfer', 'PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin']};
+
+  docker.createContainer(containerOpts, function(err, container){
+    if (err) return callback(err);
+    container.attach({stream: true, stdout: true, stderr: true}, function(err, stream) {
+      if (err) return callback(err);
+      // Store the output of the commands
+      var result = {};
+      result.success = false;
+      result.output = '';
+      stream.on('readable', function() {
+        result.output += stream.read();
+      });
+
+      container.start(function(err, data) {
+        if(err) return callback(err);
+        var killed = false;
+        var timeout = setTimeout(function() {
+          container.kill(function() {
+            killed = true;
+            console.log('container timed out for ' + container.id);
+            callback(null, result);
+            container.remove(endCallback);
+          });
+        }, 30000);
+        container.wait(function(err, data) {
+          if (killed) return;
+          clearTimeout(timeout);
+          if (err) return callback(err);
+
+          extractContents(container, container.id, function(err, dir) {
+            if (err) return callback(err);
+            verifySoltion(dir, challenge.end, function(success) {
+              result.success = success;
+              callback(null, result);
+              container.remove(endCallback);
+              fs.rmrf(dir, endCallback);
+            });
+          });
+        });
+      });
     });
   });
 }
