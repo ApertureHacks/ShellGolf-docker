@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ApertureHacks/ShellGolf-docker.png?branch=master)](https://travis-ci.org/ApertureHacks/ShellGolf-docker)
+#This branch is deprecated
 
-ShellGolf
-=========
+This component of ShellGolf has been migrated to Go. Please check out either
+master or develop for the current version of the code.
