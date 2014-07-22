@@ -1,0 +1,15 @@
+{
+  "docker": {
+    "baseImage": "jmatth/shellgolf-base",
+    "endpoint": "unix:///var/run/docker.sock"
+  },
+
+  "db": {
+    "uri": "mongodb://shellgolf:shellgolfdevpasswd@dharma.mongohq.com:10075/shellgolf-dev",
+    "database": "shellgolf-dev"
+  },
+
+  "rabbitmq": {
+    "uri": "amqp://10.100.100.2"
+  }
+}
